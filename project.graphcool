@@ -1,0 +1,57 @@
+# project: cj4eay0imbcp301728em143we
+# version: 1
+
+type Agent implements Node {
+  conversations: [Conversation!]! @relation(name: "ConversationsFromAgent")
+  createdAt: DateTime!
+  id: ID! @isUnique
+  imageUrl: String!
+  messages: [Message!]! @relation(name: "MessagesFromAgents")
+  slackUserId: String!
+  slackUserName: String!
+  updatedAt: DateTime!
+}
+
+type Conversation implements Node {
+  agent: Agent @relation(name: "ConversationsFromAgent")
+  createdAt: DateTime!
+  customer: Customer @relation(name: "ConversationsFromCustomer")
+  id: ID! @isUnique
+  messages: [Message!]! @relation(name: "MessagesInConversation")
+  slackChannelIndex: Int!
+  updatedAt: DateTime!
+}
+
+type Customer implements Node {
+  conversations: [Conversation!]! @relation(name: "ConversationsFromCustomer")
+  createdAt: DateTime!
+  id: ID! @isUnique
+  name: String!
+  updatedAt: DateTime!
+}
+
+type File implements Node {
+  contentType: String!
+  createdAt: DateTime!
+  id: ID! @isUnique
+  name: String!
+  secret: String! @isUnique
+  size: Int!
+  updatedAt: DateTime!
+  url: String! @isUnique
+}
+
+type Message implements Node {
+  agent: Agent @relation(name: "MessagesFromAgents")
+  conversation: Conversation @relation(name: "MessagesInConversation")
+  createdAt: DateTime!
+  id: ID! @isUnique
+  text: String!
+  updatedAt: DateTime!
+}
+
+type User implements Node {
+  createdAt: DateTime!
+  id: ID! @isUnique
+  updatedAt: DateTime!
+}
