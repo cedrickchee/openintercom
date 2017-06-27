@@ -86,6 +86,39 @@ const createConversation = gql`
   }
 `
 
+const newMessageSubscription = gql`
+  subscription {
+    Message(filter: {
+      mutation_in: [CREATED]
+    }) {
+      node {
+        id
+        text
+        createdAt
+        conversation {
+          id
+          updatedAt
+          slackChannelIndex
+          agent {
+            id
+            slackUserName
+            imageUrl
+            messages(last: 1) {
+              id
+              createdAt
+            }
+          }
+          messages(last: 1) {
+            id
+            text
+            createdAt
+          }
+        }
+      }
+    }
+  }
+`
+
 class App extends Component {
 
   state = {
@@ -113,6 +146,7 @@ class App extends Component {
       this._setupNewCustomer()
     }
 
+    this._subscribeToNewMessages(this)
   }
 
   render() {
@@ -194,6 +228,26 @@ class App extends Component {
     )
   }
 
+  _subscribeToNewMessages = (componentRef) => {
+    this.newMessageObserver = this.props.client.subscribe({
+      query: newMessageSubscription,
+    }).subscribe({
+      next: this._handleNewMessage,
+      error(error) {
+        console.error('App - Subscription callback with error: ', error, 'Subscribe again')
+        componentRef._subscribeToNewMessages(componentRef)
+      },
+    })
+  }
+
+  _handleNewMessage = (data) => {
+    const conversationOfNewMessage = data.Message.node.conversation
+    const newConversations = [...this.state.conversations]
+    const indexOfConversationToUpdate = newConversations.findIndex(c => c.id === conversationOfNewMessage.id)
+    newConversations[indexOfConversationToUpdate] = conversationOfNewMessage
+    newConversations.sort(sortConversationByDateCreated)
+    this.setState({ conversations: newConversations })
+  }
 
   _setupNewCustomer = async () => {
     const username = generateShortStupidName(MAX_USERNAME_LENGTH)

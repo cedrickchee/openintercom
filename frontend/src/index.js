@@ -4,11 +4,23 @@ import App from './components/App'
 import './index.css'
 import ApolloClient, { createNetworkInterface } from 'apollo-client'
 import { ApolloProvider } from 'react-apollo'
+import { SubscriptionClient, addGraphQLSubscriptions } from 'subscriptions-transport-ws'
+
+// Create WebSocket client
+const wsClient = new SubscriptionClient(`wss://subscriptions.graph.cool/v1/cj4eay0imbcp301728em143we`, {
+  reconnect: true
+})
 
 const networkInterface = createNetworkInterface({ uri: 'https://api.graph.cool/simple/v1/cj4eay0imbcp301728em143we' })
 
+// Extend the network interface with the WebSocket
+const networkInterfaceWithSubscription = addGraphQLSubscriptions(
+  networkInterface,
+  wsClient
+)
+
 const client = new ApolloClient({
-  networkInterface: networkInterface,
+  networkInterface: networkInterfaceWithSubscription,
   dataIdFromObject: o => o.id,
 })
 

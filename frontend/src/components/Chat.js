@@ -44,10 +44,41 @@ const createMessage = gql`
   }
 `
 
+const newMessageSubscription = gql`
+  subscription newMessageSubscription($conversationId: ID!) {
+    Message(filter: {
+      AND: [{
+        mutation_in: [CREATED]
+      }, {
+        node: {
+          conversation: {
+            id: $conversationId
+          }
+        }
+      }]
+    }) {
+      node {
+        id
+        text
+        createdAt
+        agent {
+          id
+          slackUserName
+          imageUrl
+        }
+      }
+    }
+  }
+`
+
 class Chat extends Component {
 
   state = {
     message: '',
+  }
+
+  componentDidMount() {
+    this._subscribeToNewMessages(this)
   }
 
   render() {
@@ -97,6 +128,26 @@ class Chat extends Component {
       variables: {
         text: this.state.message,
         conversationId: this.props.conversationId,
+      }
+    })
+  }
+
+  _subscribeToNewMessages = (componentRef) => {
+    this.newMessageSubscription = this.props.allMessagesQuery.subscribeToMore({
+      document: newMessageSubscription,
+      updateQuery: (previousState, {subscriptionData}) => {
+        const newMessage = subscriptionData.data.Message.node
+        const messages = previousState.allMessages ? [...previousState.allMessages, newMessage] : [newMessage]
+        return {
+          allMessages: messages,
+        }
+      },
+      variables: {
+        conversationId: this.props.conversationId
+      },
+      onError: (err) => {
+        console.error('Chat - An error occured while being subscribed: ', err, 'Subscribe again')
+        componentRef._subscribeToNewMessages(componentRef)
       }
     })
   }
