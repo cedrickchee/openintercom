@@ -2,8 +2,22 @@ import React, { Component} from 'react'
 import './ChatHeader.css'
 import './App.css'
 import { timeDifferenceForDate } from '../utils'
+import gql from 'graphql-tag'
+import { graphql } from 'react-apollo'
 
-export default class ChatHeader extends Component {
+const lastMessageOfCurrentAgent = gql`
+  query lastMessageOfCurrentAgent($agentId: ID!) {
+    Agent(id: $agentId) {
+      id
+      messages(last: 1) {
+        id
+        createdAt
+      }
+    }
+  }
+`
+
+class ChatHeader extends Component {
 
   render() {
     const headerSubtitle = this._generateHeaderSubtitle()
@@ -32,7 +46,21 @@ export default class ChatHeader extends Component {
   }
 
   _generateHeaderSubtitle = () => {
-
+    let headerSubtitle = ''
+    if (this.props.lastMessageOfCurrentAgentQuery && !this.props.lastMessageOfCurrentAgentQuery.loading) {
+      const lastMessage = this.props.lastMessageOfCurrentAgentQuery.Agent.messages[0]
+      headerSubtitle = 'Last active ' + timeDifferenceForDate(lastMessage.createdAt)
+    } else {
+      headerSubtitle = 'Created '  + this.props.created
+    }
+    return headerSubtitle
   }
 
 }
+
+export default graphql(lastMessageOfCurrentAgent, {
+  skip: (ownProps) => {
+    return !Boolean(ownProps.agentId)
+  },
+  name: 'lastMessageOfCurrentAgentQuery'
+})(ChatHeader)

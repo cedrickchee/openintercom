@@ -4,7 +4,7 @@ import ChatInput from './ChatInput'
 import ChatMessages from './ChatMessages'
 import Dropzone from 'react-dropzone'
 import gql from 'graphql-tag'
-import { graphql } from 'react-apollo'
+import { graphql, compose } from 'react-apollo'
 
 const allMessages = gql`
   query allMessages($conversationId: ID!) {
@@ -21,6 +21,24 @@ const allMessages = gql`
         id
         slackUserName
         imageUrl
+      }
+    }
+  }
+`
+
+const createMessage = gql`
+  mutation createMessage($text: String!, $conversationId: ID!) {
+    createMessage(text: $text, conversationId: $conversationId) {
+      id
+      text
+      createdAt
+      agent {
+        id
+        slackUserName
+        imageUrl
+      }
+      conversation {
+        id
       }
     }
   }
@@ -74,7 +92,13 @@ class Chat extends Component {
   }
 
   _onSend = () => {
-
+    console.debug('Send message: ', this.state.message, this.props.conversationId, this.props.createMessageMutation)
+    this.props.createMessageMutation({
+      variables: {
+        text: this.state.message,
+        conversationId: this.props.conversationId,
+      }
+    })
   }
 
   _onFileDrop = (acceptedFiles, rejectedFiles) => {
@@ -83,4 +107,7 @@ class Chat extends Component {
 
 }
 
-export default graphql(allMessages, { name: 'allMessagesQuery' })(Chat)
+export default compose(
+  graphql(allMessages, { name: 'allMessagesQuery' }),
+  graphql(createMessage, { name: 'createMessageMutation' })
+)(Chat)
