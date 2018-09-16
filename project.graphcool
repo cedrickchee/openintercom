@@ -1,7 +1,7 @@
 # project: cj4eay0imbcp301728em143we
 # version: 1
 
-type Agent implements Node {
+type Agent @model {
   conversations: [Conversation!]! @relation(name: "ConversationsFromAgent")
   createdAt: DateTime!
   id: ID! @isUnique
@@ -12,7 +12,7 @@ type Agent implements Node {
   updatedAt: DateTime!
 }
 
-type Conversation implements Node {
+type Conversation @model {
   agent: Agent @relation(name: "ConversationsFromAgent")
   createdAt: DateTime!
   customer: Customer @relation(name: "ConversationsFromCustomer")
@@ -22,7 +22,7 @@ type Conversation implements Node {
   updatedAt: DateTime!
 }
 
-type Customer implements Node {
+type Customer @model {
   conversations: [Conversation!]! @relation(name: "ConversationsFromCustomer")
   createdAt: DateTime!
   id: ID! @isUnique
@@ -30,7 +30,7 @@ type Customer implements Node {
   updatedAt: DateTime!
 }
 
-type File implements Node {
+type File @model {
   contentType: String!
   createdAt: DateTime!
   id: ID! @isUnique
@@ -41,7 +41,7 @@ type File implements Node {
   url: String! @isUnique
 }
 
-type Message implements Node {
+type Message @model {
   agent: Agent @relation(name: "MessagesFromAgents")
   conversation: Conversation @relation(name: "MessagesInConversation")
   createdAt: DateTime!
@@ -50,7 +50,7 @@ type Message implements Node {
   updatedAt: DateTime!
 }
 
-type User implements Node {
+type User @model {
   createdAt: DateTime!
   id: ID! @isUnique
   updatedAt: DateTime!
